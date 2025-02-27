@@ -1,0 +1,9 @@
+% bioinformatics, visidata, vcf
+# Open a VCF file in Visidata, ignoring header lines starting with ##
+grep -v "^##" <vcf_file> | vd -
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+
+# Open a gzipped VCF file in Visidata, ignoring header lines starting with ##
+gunzip -c <vcf_gz_file> | grep -v "^##" | vd -
+$ vcf_gz_file: find . -iname '*.vcf.gz' -type f --- --multi --expand
+
