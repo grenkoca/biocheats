@@ -2,6 +2,22 @@
 
 Welcome to **BioCheats**, a repository of cheatsheets designed specifically for bioinformaticians working with command-line tools. This project offers quick reference guides to streamline your analysis and data processing tasks using commonly used bioinformatics commands.
 
+## What is Navi?
+
+[Navi](https://github.com/denisidoro/navi) is an interactive cheatsheet tool for the command line that helps users quickly find and execute commands without memorizing complex syntax. It allows users to browse and run pre-written or custom command-line snippets, dynamically displaying suggested values for arguments.
+
+[![Demo](https://asciinema.org/a/406461.svg)](https://asciinema.org/a/406461)
+
+### Why Use Navi?
+- **Saves Time** – No need to memorize CLI commands.
+- **Reduces Errors** – Eliminates copy-pasting from intermediate commands.
+- **Boosts Efficiency** – Minimizes typing and speeds up workflow.
+- **Enhances Learning** – Helps users discover new and useful one-liners.
+
+Cheatsheets are written in a simple format and can be shared or customized to suit individual needs. Learn more in the [official documentation](https://github.com/denisidoro/navi/blob/master/docs/cheatsheet_syntax.md). 🚀
+
+**This project intends to create a centralized resource of Navi cheatsheets related to computational biology, bioinformatics, and the dry lab side of biomedical research.**
+
 ## 📂 Contents
 
 The repository is organized by tool or language. The current tools include:
