@@ -10,7 +10,9 @@ The repository is organized by tool or language. The current tools include:
 - **Perl/** - Cheatsheet for Perl, including common one-liners and scripts.
 - **AWK/** - Cheatsheet for AWK, with examples tailored for bioinformatics data manipulation.
 
-This is a very, *very* short subset from the universe of bioinformatics tools and is intended to grow over time. Have a tool you want added? Either open an issue stating the tool and what commands you want, or contribute it through a pull request. 
+<ins>This is a very, *very* short subset from the universe of bioinformatics tools and is intended to grow over time.</ins>
+
+Have a tool you want added? Either open an issue stating the tool and what commands you want, or contribute it through a pull request. 
 
 ## 📝 Cheatsheet Format
 
