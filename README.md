@@ -43,18 +43,34 @@ For more details on the syntax and customization, please refer to the [Navi docu
 
 ## 🚀 Getting Started
 
-1. **Clone the Repository:**
+1. **Install Navi:**
+
+   If you haven't installed Navi yet, follow the instructions on the [Navi GitHub page](https://github.com/denisidoro/navi/blob/master/docs/installation.md).
+
+   _Highest yield options:_
+   - Using Homebrew: `brew install navi`
+     
+        _or_
+   - Run install script: `bash <(curl -sL https://raw.githubusercontent.com/denisidoro/navi/master/scripts/install)`
+     
+        _or_ 
+   - Build from source:
+     ```
+     git clone https://github.com/denisidoro/navi ~/.navi
+     cd ~/.navi
+     make install
+     ```
+
+   
+
+3. **Clone BioCheats:**
 
    ```bash
    git clone https://github.com/grenkoca/biocheats.git
    cd biocheats
    ```
 
-2. **Install Navi:**
-
-   If you haven't installed Navi yet, follow the instructions on the [Navi GitHub page](https://github.com/denisidoro/navi).
-
-3. **Load the Cheatsheets:**
+4. **Load the Cheatsheets:**
 
    ```bash
    navi --cheatsheets ./biocheats
