@@ -1,0 +1,89 @@
+% bioinformatics, vep, variant-calling
+
+# Basic VEP annotation using default Ensembl cache
+vep --input_file <vcf_file> --output_file <output_file> --cache
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+
+# Annotate a VCF file with a specific genome assembly
+vep --input_file <vcf_file> --output_file <output_file> --cache --assembly <assembly>
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+$ assembly: echo "GRCh38\nGRCh37"
+
+# Use a custom reference FASTA file
+vep --input_file <vcf_file> --output_file <output_file> --fasta <reference_fasta>
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+$ reference_fasta: find . -iname '*.fa' -o -iname '*.fasta' -type f --- --multi --expand
+
+# Specify a custom cache directory
+vep --input_file <vcf_file> --output_file <output_file> --cache --dir <cache_dir>
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+$ cache_dir: find $HOME -type d -name ".vep" 2>/dev/null || echo "$HOME/.vep"
+
+# Run VEP in offline mode
+vep --input_file <vcf_file> --output_file <output_file> --offline --cache
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+
+# Output in JSON format
+vep --input_file <vcf_file> --output_file <output_json> --cache --json
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_json: echo "annotated.json"
+
+# Annotate with additional transcript and regulatory features
+vep --input_file <vcf_file> --output_file <output_file> --cache --everything
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+
+# Run multi-threaded VEP for faster performance
+vep --input_file <vcf_file> --output_file <output_file> --cache --fork <threads>
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+$ threads: seq 1 16
+
+# Filter results to only show missense variants
+vep --input_file <vcf_file> --output_file <output_file> --cache --filter "Consequence is <consequence>"
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+$ consequence: echo "missense_variant\nsynonymous_variant\nstop_gained\nframeshift_variant"
+
+# Annotate with population frequencies (gnomAD)
+vep --input_file <vcf_file> --output_file <output_file> --cache --plugin GnomAD,<population>
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+$ population: echo "ALL\nAFR\nAMR\nEAS\nEUR\nSAS"
+
+# Annotate with SpliceAI predictions
+vep --input_file <vcf_file> --output_file <output_file> --cache --plugin SpliceAI,<variant_type>
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+$ variant_type: echo "snv\ndel\nins\ndup"
+
+# Annotate with dbNSFP for multiple variant effect predictions
+vep --input_file <vcf_file> --output_file <output_file> --cache --plugin dbNSFP
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+
+# Annotate with a custom ClinVar VCF file
+vep --input_file <vcf_file> --output_file <output_file> --custom <custom_vcf>,ClinVar,vcf,exact,0
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+$ custom_vcf: find . -iname '*.vcf' -type f --- --multi --expand
+
+# Run VEP on a manually specified variant instead of a VCF
+vep --input_data "<chrom> <position> <ref> <alt>" --output_file <output_file> --cache
+$ output_file: echo "annotated.vcf"
+$ chrom: echo "1\n2\n3\n4\n5\n6\n7\n8\n9\n10\n11\n12\n13\n14\n15\n16\n17\n18\n19\n20\n21\n22\nX\nY"
+$ position: seq 100000 500000000
+$ ref: echo "A\nT\nC\nG"
+$ alt: echo "A\nT\nC\nG"
+
+# Output only selected annotation fields
+vep --input_file <vcf_file> --output_file <output_file> --fields "<fields>"
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+$ output_file: echo "annotated.vcf"
+$ fields: echo "Gene\nConsequence\nImpact\nSIFT\nPolyPhen\nAF\nCADD_PHRED" --- --multi --expand
+
