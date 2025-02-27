@@ -1,0 +1,171 @@
+% perl, bioinformatics, sequences
+
+# Parse FASTA file and print sequence lengths
+perl -ne 'if(/^>(\S+)/){$id=$1}else{$seq{$id}.=$_} END{foreach $id (keys %seq){$seq{$id}=~s/\s+//g; print "$id\t".length($seq{$id})."\n"}}' <fasta_file>
+
+$ fasta_file: find . -name "*.fasta" -o -name "*.fa" -o -name "*.fna" -type f
+
+# Extract sequences matching pattern from FASTA file
+perl -ne 'if(/^>(\S+)/){$p=($1=~/<pattern>/i)?1:0} print if $p' <fasta_file> > <output_file>
+
+$ pattern: echo "kinase receptor transporter channel factor" | tr " " "\n"
+$ output_file: echo "filtered_sequences.fa"
+
+# Count nucleotide composition in FASTA file
+perl -ne 'next if /^>/; $seq.=$_; END{$seq=~s/\s+//g; $a=$seq=~tr/aA//; $c=$seq=~tr/cC//; $g=$seq=~tr/gG//; $t=$seq=~tr/tT//; $n=$seq=~tr/nN//; print "A: $a\nC: $c\nG: $g\nT: $t\nN: $n\nGC: ".sprintf("%.2f%%", 100*($g+$c)/length($seq))."\n"}' <fasta_file>
+
+# Extract specific FASTA sequences by ID
+perl -ne 'if(/^>(\S+)/){$p=($1 eq "<seq_id>")?1:0} print if $p' <fasta_file> > <single_seq_file>
+
+$ seq_id: grep "^>" <fasta_file> | sed 's/^>//' | cut -d ' ' -f 1
+$ single_seq_file: echo "${seq_id}.fa"
+
+# Split multi-FASTA file into individual FASTA files
+perl -ne 'if(/^>(\S+)/){$id=$1; open(OUT, ">$id.fa")} print OUT' <fasta_file>
+
+% perl, fastq, processing
+
+# Convert FASTQ to FASTA format
+perl -ne 'if($. % 4 == 1){s/^@/>/} if($. % 4 == 1 || $. % 4 == 2){print}' <fastq_file> > <fasta_file>
+
+$ fastq_file: find . -name "*.fastq" -o -name "*.fq" -type f
+$ fasta_file: echo "${fastq_file%.*}.fa"
+
+# Calculate average read length in FASTQ file
+perl -ne 'if($. % 4 == 2){$t+=length($_); $c++} END{print "Average length: ".($t/$c)."\n"}' <fastq_file>
+
+# Calculate average quality score in FASTQ file
+perl -ne 'if($. % 4 == 0){chomp; $t+=sum(map{ord($_)-33}split//); $c+=length($_)} END{print "Average quality: ".($t/$c)."\n"}; sub sum{my $s=0; map{$s+=$_}@_; return $s}' <fastq_file>
+
+# Extract reads with minimum length from FASTQ file
+perl -ne 'if($. % 4 == 1){$h=$_}elsif($. % 4 == 2){$s=$_}elsif($. % 4 == 3){$p=$_}elsif($. % 4 == 0){$q=$_; if(length($s) >= <min_length>){print "$h$s$p$q"}}' <fastq_file> > <filtered_file>
+
+$ min_length: echo "50 100 150 200" | tr " " "\n"
+$ filtered_file: echo "${fastq_file%.*}.min${min_length}.fastq"
+
+# Filter FASTQ by quality score (minimum average)
+perl -ne 'if($. % 4 == 1){$h=$_}elsif($. % 4 == 2){$s=$_}elsif($. % 4 == 3){$p=$_}elsif($. % 4 == 0){$q=$_; $sum=0; map{$sum+=ord($_)-33}split//,$q; $avg=$sum/length($q); if($avg >= <min_qual>){print "$h$s$p$q"}}' <fastq_file> > <quality_filtered>
+
+$ min_qual: echo "20 25 30 35" | tr " " "\n"
+$ quality_filtered: echo "${fastq_file%.*}.q${min_qual}.fastq"
+
+% perl, genomic, formats
+
+# Convert GTF to BED format
+perl -ne 'if(/^\S+\s+\S+\s+(\S+)\s+(\d+)\s+(\d+)\s+\S+\s+(\S+)\s+\S+\s+(\S+)/){print "$1\t".($2-1)."\t$3\t$5\t0\t$4\n"}' <gtf_file> > <bed_file>
+
+$ gtf_file: find . -name "*.gtf" -o -name "*.gff" -type f
+$ bed_file: echo "${gtf_file%.*}.bed"
+
+# Extract specific features from GTF/GFF
+perl -ne 'if(/\t<feature_type>\t/){print}' <gtf_file> > <feature_file>
+
+$ feature_type: echo "gene exon CDS mRNA tRNA" | tr " " "\n"
+$ feature_file: echo "${gtf_file%.*}.${feature_type}.gtf"
+
+# Parse VCF file and extract specific fields
+perl -ne 'if(/^#/){print; next} @F=split(/\t/); print "$F[0]\t$F[1]\t$F[3]\t$F[4]\t$F[5]\n"' <vcf_file> > <parsed_vcf>
+
+$ vcf_file: find . -name "*.vcf" -type f
+$ parsed_vcf: echo "${vcf_file%.*}.parsed.txt"
+
+# Count types of variants in VCF
+perl -ne 'next if /^#/; @F=split(/\t/); if(length($F[3])==1 && length($F[4])==1){$snp++}elsif(length($F[3])<length($F[4])){$ins++}elsif(length($F[3])>length($F[4])){$del++}else{$other++} END{print "SNPs: $snp\nInsertions: $ins\nDeletions: $del\nOther: $other\n"}' <vcf_file>
+
+% perl, alignment, manipulation
+
+# Parse and extract statistics from SAM/BAM file
+perl -ne 'next if /^@/; @F=split(/\t/); $mapped++ if($F[1] & 4 == 0); $total++; END{print "Total reads: $total\nMapped reads: $mapped\nMapping rate: ".sprintf("%.2f%%", 100*$mapped/$total)."\n"}' <sam_file>
+
+$ sam_file: find . -name "*.sam" -type f
+
+# Extract mapped reads from SAM file
+perl -ne 'print if /^@/ || ($_ !~ /\t4\t/)' <sam_file> > <mapped_sam>
+
+$ mapped_sam: echo "${sam_file%.*}.mapped.sam"
+
+# Extract unmapped reads from SAM file
+perl -ne 'print if /^@/ || ($_ =~ /\t4\t/)' <sam_file> > <unmapped_sam>
+
+$ unmapped_sam: echo "${sam_file%.*}.unmapped.sam"
+
+# Calculate per-base coverage from SAM/BAM
+perl -ne 'next if /^@/; @F=split(/\t/); next if $F[2] eq "*"; $s=$F[3]; $cig=$F[5]; while($cig=~/(\d+)([MIDNSHP=X])/g){if($2 eq "M"){$e=$s+$1-1; for($i=$s;$i<=$e;$i++){$cov{$F[2]}{$i}++}} if($2 =~ /[DNPM=X]/){$s+=$1}} END{foreach $chr (keys %cov){foreach $pos (sort {$a<=>$b} keys %{$cov{$chr}}){print "$chr\t$pos\t$cov{$chr}{$pos}\n"}}}' <sam_file> > <coverage_file>
+
+$ coverage_file: echo "${sam_file%.*}.coverage.txt"
+
+% perl, batch, processing
+
+# Process all FASTA files in directory
+for file in $(find . -name "*.fa" -o -name "*.fasta"); do perl -ne '<perl_command>' $file > ${file%.*}.processed.fa; done
+
+$ perl_command: echo 'if(/^>/){print}else{tr/atgc/ATGC/; print}' 'chomp; $seq.=$_ if !/^>/; END{print length($seq)."\n"}'
+
+# Mass rename sequence headers in FASTA files
+perl -i.bak -pe 's/^>(\S+)/>prefix_$1/' <fasta_file>
+
+$ prefix: echo "gene transcript contig chr" | tr " " "\n"
+
+# Run a custom Perl script on input file
+perl <perl_script> <input_file> <output_file>
+
+$ perl_script: find . -name "*.pl" -type f
+
+% perl, advanced, bioinformatics
+
+# One-liner to create reverse complement of DNA sequence
+perl -ne 'chomp; next if /^>/; $r=reverse($_); $r=~tr/ACGTacgt/TGCAtgca/; print "$r\n"' <fasta_file> > <revcomp_file>
+
+$ revcomp_file: echo "${fasta_file%.*}.revcomp.fa"
+
+# Extract ORFs from DNA sequence
+perl -MBio::Perl -e 'use Bio::SeqIO; $in=Bio::SeqIO->new(-file=>"<fasta_file>", -format=>"fasta"); $out=Bio::SeqIO->new(-file=>">$ARGV[0]", -format=>"fasta"); while($seq=$in->next_seq){for($i=0;$i<3;$i++){$s=$seq->subseq(1+$i,$seq->length); while($s=~/((ATG)(\w\w\w)*?(TAA|TAG|TGA))/g){$orf=Bio::Seq->new(-seq=>$1, -id=>$seq->id."_ORF_".$i."_".pos($s)); $out->write_seq($orf)}}}' <orfs_file>
+
+$ orfs_file: echo "${fasta_file%.*}.orfs.fa"
+
+# Extract protein translations from nucleotide sequences
+perl -MBio::Perl -e 'use Bio::SeqIO; $in=Bio::SeqIO->new(-file=>"<fasta_file>", -format=>"fasta"); $out=Bio::SeqIO->new(-file=>">$ARGV[0]", -format=>"fasta"); while($seq=$in->next_seq){$prot=$seq->translate; $out->write_seq($prot)}' <translated_file>
+
+$ translated_file: echo "${fasta_file%.*}.pep.fa"
+
+# Find motifs in protein sequences
+perl -ne 'if(/^>(\S+)/){$id=$1}else{$seq{$id}.=$_} END{foreach $id (keys %seq){$seq{$id}=~s/\s+//g; while($seq{$id}=~/(<motif>)/g){print "$id\t".pos($seq{$id})."\t$1\n"}}}' <fasta_file> > <motif_file>
+
+$ motif: echo "PROSITE:PS00001 RGD KGD TATAAT TG.{1,3}CA" | tr " " "\n"
+$ motif_file: echo "motif_hits.txt"
+
+# Generate simple sequence statistics using BioPerl
+perl -MBio::Perl -e 'use Bio::SeqIO; $in=Bio::SeqIO->new(-file=>"<fasta_file>", -format=>"fasta"); while($seq=$in->next_seq){$len=$seq->length; $id=$seq->id; $gc=($seq->seq=~tr/GCgc//)/($len)*100; print "$id\tLength: $len\tGC: $gc%\n"}' > <stats_file>
+
+$ stats_file: echo "sequence_stats.txt"
+
+% perl, one, liners
+
+# Replace sequence headers with incremental numbers
+perl -pe 's/^>.*/>SEQ_$n/g and $n++' <fasta_file> > <renamed_file>
+
+$ renamed_file: echo "${fasta_file%.*}.renamed.fa"
+
+# Convert lowercase to uppercase in sequences
+perl -pe 'tr/acgt/ACGT/ unless /^>/' <fasta_file> > <uppercase_file>
+
+$ uppercase_file: echo "${fasta_file%.*}.uppercase.fa"
+
+# Add prefix to each line in a file
+perl -pe 's/^/<prefix>/' <input_file> > <prefixed_file>
+
+$ input_file: find . -type f -name "*.txt"
+$ prefixed_file: echo "${input_file%.*}.prefixed.txt"
+
+# Calculate GC content across sliding windows
+perl -ne 'chomp; if(/^>(\S+)/){$id=$1}else{$seq{$id}.=$_} END{foreach $id (keys %seq){$seq=$seq{$id}; for($i=0;$i<length($seq)-<window_size>;$i+=$step_size){$sub=substr($seq,$i,<window_size>); $gc=($sub=~tr/GCgc//)/length($sub)*100; print "$id\t".($i+1)."\t".($i+<window_size>)."\t$gc\n"}}}' <window_size>=<sliding_window> <step_size>=<step_size> <fasta_file> > <gc_windows>
+
+$ sliding_window: echo "100 200 500 1000" | tr " " "\n"
+$ step_size: echo "50 100 200 500" | tr " " "\n"
+$ gc_windows: echo "gc_windows_${sliding_window}_${step_size}.txt"
+
+# Count kmers in sequences
+perl -ne 'chomp; if(!/^>/){for($i=0;$i<=length($_)-<kmer_size>;$i++){$kmer=substr($_,$i,<kmer_size>); $count{$kmer}++}} END{foreach $kmer (sort keys %count){print "$kmer\t$count{$kmer}\n"}}' <kmer_size>=<k_length> <fasta_file> > <kmer_counts>
+
+$ k_length: echo "3 4 5 6" | tr " " "\n"
+$ kmer_counts: echo "kmer_${k_length}_counts.txt"

@@ -1,0 +1,179 @@
+% blast, sequences, search
+
+# Basic nucleotide BLAST search (blastn)
+blastn -query <query_fasta> -db <blast_db> -out <output_file>
+
+$ query_fasta: find . -name "*.fasta" -o -name "*.fa" -o -name "*.fna" -type f
+$ blast_db: find ~ -path "*/blast/db/*" -name "*.nin" | sed 's/\.nin$//' || echo "nt"
+$ output_file: echo "${query_fasta%.*}_blastn_results.txt"
+
+# Protein BLAST search (blastp)
+blastp -query <protein_fasta> -db <protein_db> -out <output_file>
+
+$ protein_fasta: find . -name "*.faa" -o -name "*.fasta" -o -name "*.pep" -type f
+$ protein_db: find ~ -path "*/blast/db/*" -name "*.pin" | sed 's/\.pin$//' || echo "nr"
+$ output_file: echo "${protein_fasta%.*}_blastp_results.txt"
+
+# Translated nucleotide BLAST search (blastx)
+blastx -query <nucleotide_fasta> -db <protein_db> -out <output_file>
+
+$ nucleotide_fasta: find . -name "*.fasta" -o -name "*.fa" -o -name "*.fna" -type f
+$ output_file: echo "${nucleotide_fasta%.*}_blastx_results.txt"
+
+# Translated protein BLAST search (tblastn)
+tblastn -query <protein_fasta> -db <nucleotide_db> -out <output_file>
+
+$ nucleotide_db: find ~ -path "*/blast/db/*" -name "*.nin" | sed 's/\.nin$//' || echo "nt"
+$ output_file: echo "${protein_fasta%.*}_tblastn_results.txt"
+
+# Translated nucleotide vs translated nucleotide BLAST (tblastx)
+tblastx -query <query_nucleotide> -db <subject_nucleotide_db> -out <output_file>
+
+$ query_nucleotide: find . -name "*.fasta" -o -name "*.fa" -o -name "*.fna" -type f
+$ subject_nucleotide_db: find ~ -path "*/blast/db/*" -name "*.nin" | sed 's/\.nin$//' || echo "nt"
+$ output_file: echo "${query_nucleotide%.*}_tblastx_results.txt"
+
+% blast, formatting, options
+
+# BLAST search with custom output format
+<blast_program> -query <input_fasta> -db <blast_db> -outfmt <format_code> -out <output_file>
+
+$ blast_program: echo "blastn blastp blastx tblastn tblastx" | tr " " "\n"
+$ format_code: echo "6 7 0 10 11" | tr " " "\n" --- --expand
+
+# BLAST with tabular output format (most common fields)
+<blast_program> -query <input_fasta> -db <blast_db> -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" -out <output_file>
+
+# BLAST with XML output (for programmatic parsing)
+<blast_program> -query <input_fasta> -db <blast_db> -outfmt 5 -out <output_file>
+
+# BLAST search with HTML output (for viewing in browser)
+<blast_program> -query <input_fasta> -db <blast_db> -html -out <output_file>.html
+
+$ output_file: echo "${input_fasta%.*}_blast_results"
+
+% blast, database, creation
+
+# Create BLAST database from FASTA file (nucleotide)
+makeblastdb -in <input_fasta> -dbtype nucl -out <db_name>
+
+$ db_name: echo "${input_fasta%.*}_db"
+
+# Create BLAST database from FASTA file (protein)
+makeblastdb -in <input_fasta> -dbtype prot -out <db_name>
+
+# Create BLAST database with taxonomy information
+makeblastdb -in <input_fasta> -dbtype <db_type> -out <db_name> -parse_seqids -taxid_map <taxid_map>
+
+$ db_type: echo "nucl prot" | tr " " "\n"
+$ taxid_map: find . -name "*.taxid.map" -type f
+
+# List available BLAST databases
+blastdbcmd -list <database_location>
+
+$ database_location: echo "/blast/db $HOME/blast/db /usr/local/blast/db /opt/blast/db" | tr " " "\n"
+
+% blast, filtering, alignment
+
+# BLAST with E-value threshold
+<blast_program> -query <input_fasta> -db <blast_db> -evalue <evalue_threshold> -out <output_file>
+
+$ evalue_threshold: echo "1e-5 1e-10 1e-20 1e-50 0.001 0.01" | tr " " "\n"
+
+# BLAST with identity percentage threshold
+<blast_program> -query <input_fasta> -db <blast_db> -outfmt "6 qseqid sseqid pident length evalue bitscore" -out <output_file> | awk '$3 >= <min_identity>'
+
+$ min_identity: echo "70 80 90 95 98" | tr " " "\n"
+
+# BLAST with maximum number of target sequences
+<blast_program> -query <input_fasta> -db <blast_db> -max_target_seqs <max_hits> -out <output_file>
+
+$ max_hits: echo "5 10 25 50 100 500" | tr " " "\n"
+
+# BLAST with custom word size (affects sensitivity)
+<blast_program> -query <input_fasta> -db <blast_db> -word_size <word_size> -out <output_file>
+
+$ word_size: echo "6 7 8 11 12 15 16 18 28" | tr " " "\n"
+
+# BLAST with custom gap costs
+<blast_program> -query <input_fasta> -db <blast_db> -gapopen <gap_open> -gapextend <gap_extend> -out <output_file>
+
+$ gap_open: echo "5 10 15" | tr " " "\n"
+$ gap_extend: echo "2 3 4" | tr " " "\n"
+
+% blast, specialized, searches
+
+# BLAST search against specific taxonomic group
+<blast_program> -query <input_fasta> -db <blast_db> -taxids <taxid> -out <output_file>
+
+$ taxid: echo "9606 # Human\n10090 # Mouse\n7955 # Zebrafish\n7227 # Fruit fly\n6239 # C. elegans\n4932 # S. cerevisiae" | grep -Po '^\d+'
+
+# BLAST search excluding specific taxonomic group
+<blast_program> -query <input_fasta> -db <blast_db> -negative_taxids <taxid> -out <output_file>
+
+# MegaBLAST for highly similar sequences (faster)
+blastn -query <input_fasta> -db <blast_db> -task megablast -out <output_file>
+
+# BLAST with soft masking (for repeats)
+<blast_program> -query <input_fasta> -db <blast_db> -soft_masking true -out <output_file>
+
+# Position-Specific Iterated BLAST (PSI-BLAST)
+psiblast -query <protein_fasta> -db <protein_db> -num_iterations <iterations> -out <output_file>
+
+$ iterations: echo "3 5 10" | tr " " "\n"
+
+% blast, batch, processing
+
+# Run BLAST on multiple query sequences (from file)
+<blast_program> -query <multi_fasta> -db <blast_db> -out <output_file>
+
+$ multi_fasta: find . -name "*.fasta" -o -name "*.fa" -o -name "*.fna" -type f
+
+# Run BLAST on each sequence in a file separately
+cat <multi_fasta> | awk '/^>/ {if (seqfile) {close(seqfile)}; gsub(/[^A-Za-z0-9]/,"_",$1); seqfile=substr($1,2)".fa"} {print > seqfile}' && \
+for f in *.fa; do <blast_program> -query $f -db <blast_db> -out ${f%.fa}.blast.out; done
+
+# Parse and filter BLAST tabular output
+awk '$3 >= <min_identity> && $11 <= <max_evalue> {print}' <blast_tabular_output> > <filtered_output>
+
+$ blast_tabular_output: find . -name "*blast*out*" -type f
+$ filtered_output: echo "${blast_tabular_output%.*}.filtered.txt"
+$ max_evalue: echo "1e-5 1e-10 0.001 0.01" | tr " " "\n"
+
+# Convert BLAST XML output to tabular format
+blast_formatter -archive <blast_archive> -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" -out <tabular_output>
+
+$ blast_archive: find . -name "*.asn" -o -name "*.xml" -type f
+$ tabular_output: echo "${blast_archive%.*}.tab"
+
+% blast, remote, usage
+
+# BLAST search against NCBI online databases
+<blast_program> -query <input_fasta> -db <online_db> -remote -out <output_file>
+
+$ online_db: echo "nt nr refseq_genomic refseq_protein swissprot pdbaa" | tr " " "\n"
+
+# Remote BLAST with organism restriction
+<blast_program> -query <input_fasta> -db <online_db> -remote -entrez_query "<organism>[ORGN]" -out <output_file>
+
+$ organism: echo "Homo sapiens\nMus musculus\nDrosophila melanogaster\nEscherichia coli\nSaccharomyces cerevisiae" | tr "\n" "\n"
+
+# Run DELTA-BLAST (Domain Enhanced Lookup Time Accelerated BLAST)
+deltablast -query <protein_fasta> -db <protein_db> -remote -out <output_file>
+
+# Get BLAST database information
+blastdbcmd -db <online_db> -info -remote
+
+% blast, visualizations
+
+# BLAST with alignment view and identities marked
+<blast_program> -query <input_fasta> -db <blast_db> -outfmt 0 -show_gis -out <output_file>
+
+# Create a BLAST JSON output for visualization
+<blast_program> -query <input_fasta> -db <blast_db> -outfmt 15 -out <output_file>.json
+
+# Run BLAST and save results for NCBI BLAST viewer
+<blast_program> -query <input_fasta> -db <blast_db> -outfmt 11 -out <output_file>.asn
+
+# Generate graphical BLAST result from saved ASN.1 file
+blast_formatter -archive <output_file>.asn -outfmt 0 -html -out <output_file>_graphical.html
