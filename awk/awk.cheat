@@ -1,0 +1,35 @@
+% bioinformatics, awk
+# Bioinformatics AWK Cheatsheet
+# This cheatsheet provides common AWK commands for processing bioinformatics files.
+# AWK is a powerful text-processing tool frequently used to extract, filter, and summarize data.
+
+# 1. Extract FASTA Headers
+# Print only the header lines (those starting with ">") from a FASTA file.
+awk '/^>/{print $0}' <fasta_file>
+$ fasta_file: find . -iname '*.fasta' -type f --- --multi --expand
+
+# 2. Extract Specific Columns from a TSV File
+# For example, extract the 1st and 3rd columns (adjust as needed) from a tab-separated file.
+awk -F '\t' '{print $1, $3}' <input_file>
+$ input_file: find . -iname '*.tsv' -type f --- --multi --expand
+
+# 3. Sum Values in a Specific Column
+# Calculate the sum of all numbers in the 2nd column of a file (e.g., read counts or expression values).
+awk '{sum += $2} END {print sum}' <data_file>
+$ data_file: find . -iname '*.txt' -type f --- --multi --expand
+
+# 4. Filter VCF for SNPs
+# Display only SNP entries from a VCF file by ensuring both reference and alternate alleles are single nucleotides.
+awk 'BEGIN {FS="\t"} !/^#/ && length($4)==1 && length($5)==1 {print $0}' <vcf_file>
+$ vcf_file: find . -iname '*.vcf' -type f --- --multi --expand
+
+# 5. Convert CSV to TSV
+# Change comma-separated values into tab-separated values.
+awk -F',' 'BEGIN {OFS="\t"} {$1=$1; print}' <csv_file>
+$ csv_file: find . -iname '*.csv' -type f --- --multi --expand
+
+# 6. Calculate Average of a Column
+# Compute the average value of numbers in the 3rd column.
+awk '{sum += $3; count++} END {if(count > 0) print sum/count}' <data_file>
+$ data_file: find . -iname '*.txt' -type f --- --multi --expand
+
